@@ -7,91 +7,64 @@
   <style>
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, Arial;
+      font-family: Arial;
       background: #f4f6fb;
-      padding-bottom: 75px;
-      -webkit-tap-highlight-color: transparent;
+      padding-bottom: 70px;
     }
 
-    /* TOP BAR */
     .header {
-      background: #0f0f10;
+      background: #111;
       color: white;
-      padding: 16px;
-      font-weight: 600;
+      padding: 15px;
       text-align: center;
-      font-size: 16px;
-      letter-spacing: 0.3px;
+      font-weight: bold;
     }
 
-    /* PAGES */
     .page {
       display: none;
-      padding: 16px;
-      animation: fade 0.25s ease;
+      padding: 15px;
     }
 
     .active {
       display: block;
     }
 
-    @keyframes fade {
-      from { opacity: 0; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    h2 {
-      margin: 10px 0 15px;
-      font-size: 22px;
-    }
-
-    /* CARDS */
     .card {
       background: white;
       padding: 14px;
-      border-radius: 14px;
-      margin-bottom: 10px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      border-radius: 12px;
+      margin-top: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    /* INPUT */
-    .input-box {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
+    button {
+      border: none;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .delete {
+      background: red;
+      color: white;
+    }
+
+    .back {
+      background: #ddd;
+      margin-bottom: 10px;
     }
 
     input {
-      flex: 1;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      outline: none;
-      font-size: 14px;
-    }
-
-    button {
-      padding: 12px 14px;
-      border: none;
-      border-radius: 10px;
-      background: #111;
-      color: white;
-      font-weight: 600;
-    }
-
-    /* DELETE */
-    .delete {
-      background: #ff3b30;
-      padding: 6px 10px;
+      padding: 10px;
+      width: 70%;
       border-radius: 8px;
-      font-size: 12px;
+      border: 1px solid #ccc;
     }
 
-    /* BOTTOM NAV (APP STYLE) */
-    .nav {
+    .bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
@@ -99,32 +72,19 @@
       background: white;
       display: flex;
       justify-content: space-around;
-      padding: 10px 0 8px;
-      box-shadow: 0 -5px 20px rgba(0,0,0,0.08);
-      border-top-left-radius: 18px;
-      border-top-right-radius: 18px;
+      padding: 10px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     }
 
     .tab {
       text-align: center;
-      font-size: 11px;
-      color: #777;
-      flex: 1;
+      font-size: 12px;
+      cursor: pointer;
     }
 
     .tab span {
+      font-size: 18px;
       display: block;
-      font-size: 20px;
-      margin-bottom: 2px;
-    }
-
-    .tab.active {
-      color: #111;
-      font-weight: 600;
-    }
-
-    .tab.active span {
-      transform: scale(1.1);
     }
   </style>
 </head>
@@ -133,23 +93,27 @@
 
 <div class="header">🏠 HomeSync</div>
 
-<!-- DASHBOARD -->
-<div id="dashboard" class="page active">
+<!-- HOME -->
+<div id="home" class="page active">
   <h2>Dashboard</h2>
   <div class="card" id="summary"></div>
-  <div class="card">Quick access to your home system 🚀</div>
 </div>
 
 <!-- ROOMS -->
 <div id="rooms" class="page">
   <h2>Rooms</h2>
 
-  <div class="input-box">
-    <input id="roomInput" placeholder="Add a room...">
-    <button onclick="addRoom()">Add</button>
-  </div>
+  <input id="roomInput" placeholder="Add room...">
+  <button onclick="addRoom()">Add</button>
 
   <div id="roomList"></div>
+</div>
+
+<!-- ROOM DETAIL -->
+<div id="roomPage" class="page">
+  <button class="back" onclick="backToRooms()">⬅ Back</button>
+  <h2 id="roomTitle"></h2>
+  <div class="card">No tasks yet</div>
 </div>
 
 <!-- PLANNER -->
@@ -157,34 +121,21 @@
   <h2>Planner</h2>
   <div class="card">✔ Clean kitchen</div>
   <div class="card">✔ Decor ideas</div>
-  <div class="card">✔ Weekly goals</div>
 </div>
 
 <!-- IDEAS -->
 <div id="ideas" class="page">
   <h2>Ideas</h2>
-  <div class="card">Modern minimalist bedroom</div>
-  <div class="card">Luxury living room setup</div>
-  <div class="card">Organised kitchen layout</div>
+  <div class="card">Modern bedroom</div>
+  <div class="card">Luxury kitchen</div>
 </div>
 
 <!-- BOTTOM NAV -->
-<div class="nav">
-  <div class="tab active" onclick="openPage('dashboard', this)">
-    <span>🏠</span>Home
-  </div>
-
-  <div class="tab" onclick="openPage('rooms', this)">
-    <span>🛋️</span>Rooms
-  </div>
-
-  <div class="tab" onclick="openPage('planner', this)">
-    <span>📝</span>Planner
-  </div>
-
-  <div class="tab" onclick="openPage('ideas', this)">
-    <span>💡</span>Ideas
-  </div>
+<div class="bottom-nav">
+  <div class="tab" onclick="showPage('home')"><span>🏠</span>Home</div>
+  <div class="tab" onclick="showPage('rooms')"><span>🛋️</span>Rooms</div>
+  <div class="tab" onclick="showPage('planner')"><span>📝</span>Planner</div>
+  <div class="tab" onclick="showPage('ideas')"><span>💡</span>Ideas</div>
 </div>
 
 <script>
@@ -194,20 +145,17 @@ function save() {
   localStorage.setItem("rooms", JSON.stringify(rooms));
 }
 
-/* PAGE SWITCH (APP FEEL) */
-function openPage(page, el) {
+/* PAGE SYSTEM */
+function showPage(page) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById(page).classList.add("active");
 
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  el.classList.add("active");
-
   if (page === "rooms") renderRooms();
-  if (page === "dashboard") updateDashboard();
+  if (page === "home") updateHome();
 }
 
-/* DASHBOARD */
-function updateDashboard() {
+/* HOME */
+function updateHome() {
   document.getElementById("summary").innerText =
     "You have " + rooms.length + " rooms in your home system.";
 }
@@ -220,8 +168,11 @@ function renderRooms() {
   rooms.forEach((room, i) => {
     list.innerHTML += `
       <div class="card">
-        ${room}
-        <button class="delete" onclick="removeRoom(${i})">Delete</button>
+        <div onclick="openRoom('${room}')" style="cursor:pointer;">
+          ${room}
+        </div>
+
+        <button class="delete" onclick="removeRoom(${i})">X</button>
       </div>
     `;
   });
@@ -235,7 +186,7 @@ function addRoom() {
     input.value = "";
     save();
     renderRooms();
-    updateDashboard();
+    updateHome();
   }
 }
 
@@ -243,11 +194,24 @@ function removeRoom(i) {
   rooms.splice(i, 1);
   save();
   renderRooms();
-  updateDashboard();
+  updateHome();
+}
+
+/* ROOM OPENING (THIS IS THE FIX) */
+function openRoom(name) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("roomPage").classList.add("active");
+
+  document.getElementById("roomTitle").innerText = name;
+}
+
+/* BACK BUTTON */
+function backToRooms() {
+  showPage("rooms");
 }
 
 /* INIT */
-updateDashboard();
+updateHome();
 </script>
 
 </body>
