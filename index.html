@@ -14,38 +14,18 @@
     .header {
       background: #111;
       color: white;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
     }
 
-    .container {
-      display: flex;
-      min-height: 100vh;
+    .page {
+      display: none;
+      padding: 15px;
     }
 
-    .sidebar {
-      width: 220px;
-      background: white;
-      padding: 20px;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-    }
-
-    .nav-item {
-      padding: 10px;
-      margin: 5px 0;
-      cursor: pointer;
-      border-radius: 8px;
-    }
-
-    .nav-item:hover {
-      background: #f0f0f0;
-    }
-
-    .content {
-      flex: 1;
-      padding: 20px;
+    .active {
+      display: block;
     }
 
     .card {
@@ -56,7 +36,30 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
 
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+
+    .nav-btn {
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    input {
+      padding: 10px;
+      width: 70%;
+    }
+
     button {
+      padding: 10px;
       cursor: pointer;
     }
   </style>
@@ -64,105 +67,101 @@
 
 <body>
 
-<div class="header">
-  <h2>🏠 HomeSync</h2>
-  <span>Your home app</span>
+<div class="header">🏠 HomeSync</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="page active">
+  <h2>Dashboard</h2>
+  <div class="card">Welcome to HomeSync 🚀</div>
+  <div class="card" id="roomCount"></div>
 </div>
 
-<div class="container">
+<!-- ROOMS -->
+<div id="rooms" class="page">
+  <h2>Rooms</h2>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="nav-item" onclick="showPage('dashboard')">🏠 Dashboard</div>
-    <div class="nav-item" onclick="showPage('rooms')">🛋️ Rooms</div>
-    <div class="nav-item" onclick="showPage('planner')">📝 Planner</div>
-    <div class="nav-item" onclick="showPage('ideas')">💡 Ideas</div>
+  <div class="card">
+    <input id="roomInput" placeholder="Add room...">
+    <button onclick="addRoom()">Add</button>
   </div>
 
-  <!-- CONTENT -->
-  <div class="content" id="content"></div>
+  <div id="roomList"></div>
+</div>
 
+<!-- PLANNER -->
+<div id="planner" class="page">
+  <h2>Planner</h2>
+  <div class="card">✔ Clean kitchen</div>
+  <div class="card">✔ Decor ideas</div>
+</div>
+
+<!-- IDEAS -->
+<div id="ideas" class="page">
+  <h2>Ideas</h2>
+  <div class="card">Modern minimalist bedroom</div>
+  <div class="card">Cozy living room setup</div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-btn" onclick="openPage('dashboard')">🏠</div>
+  <div class="nav-btn" onclick="openPage('rooms')">🛋️</div>
+  <div class="nav-btn" onclick="openPage('planner')">📝</div>
+  <div class="nav-btn" onclick="openPage('ideas')">💡</div>
 </div>
 
 <script>
-let rooms = JSON.parse(localStorage.getItem("rooms")) || ["Living Room", "Bedroom", "Kitchen"];
+let rooms = JSON.parse(localStorage.getItem("rooms")) || ["Living Room", "Bedroom"];
 
-function saveRooms() {
+function save() {
   localStorage.setItem("rooms", JSON.stringify(rooms));
 }
 
-function showPage(page) {
-  let content = document.getElementById("content");
+function openPage(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(page).classList.add("active");
 
-  if (page === "dashboard") {
-    content.innerHTML = `
-      <h1>Dashboard</h1>
-      <div class="card">Welcome to HomeSync 🚀</div>
-      <div class="card">You currently have ${rooms.length} rooms</div>
-    `;
-  }
+  if (page === "rooms") renderRooms();
+  if (page === "dashboard") updateDashboard();
+}
 
-  if (page === "rooms") {
-    let roomsHTML = rooms.map((room, index) => `
+function updateDashboard() {
+  document.getElementById("roomCount").innerText = "You have " + rooms.length + " rooms";
+}
+
+function renderRooms() {
+  let list = document.getElementById("roomList");
+  list.innerHTML = "";
+
+  rooms.forEach((r, i) => {
+    list.innerHTML += `
       <div class="card">
-        ${room}
-        <button onclick="removeRoom(${index})"
-          style="float:right; background:red; color:white; border:none; padding:5px 10px; border-radius:6px;">
-          ❌
-        </button>
+        ${r}
+        <button onclick="removeRoom(${i})" style="float:right; background:red; color:white; border:none; padding:5px 10px; border-radius:6px;">❌</button>
       </div>
-    `).join("");
-
-    content.innerHTML = `
-      <h1>Rooms</h1>
-
-      <div class="card">
-        <input id="roomInput" placeholder="Add new room..." style="padding:8px; width:70%;">
-        <button onclick="addRoom()" style="padding:8px;">Add</button>
-      </div>
-
-      ${roomsHTML}
     `;
-  }
-
-  if (page === "planner") {
-    content.innerHTML = `
-      <h1>Planner</h1>
-      <div class="card">✔ Clean kitchen</div>
-      <div class="card">✔ Decor ideas</div>
-    `;
-  }
-
-  if (page === "ideas") {
-    content.innerHTML = `
-      <h1>Ideas</h1>
-      <div class="card">Modern minimalist bedroom</div>
-      <div class="card">Cozy living room setup</div>
-    `;
-  }
+  });
 }
 
 function addRoom() {
   let input = document.getElementById("roomInput");
-  let value = input.value.trim();
-
-  if (value !== "") {
-    rooms.push(value);
-    saveRooms();
-    showPage("rooms");
+  if (input.value.trim() !== "") {
+    rooms.push(input.value);
+    input.value = "";
+    save();
+    renderRooms();
+    updateDashboard();
   }
-
-  input.value = "";
 }
 
-function removeRoom(index) {
-  rooms.splice(index, 1);
-  saveRooms();
-  showPage("rooms");
+function removeRoom(i) {
+  rooms.splice(i, 1);
+  save();
+  renderRooms();
+  updateDashboard();
 }
 
-// default page
-showPage("dashboard");
+updateDashboard();
 </script>
 
 </body>
