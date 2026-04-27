@@ -7,71 +7,91 @@
   <style>
     body {
       margin: 0;
-      font-family: Arial;
-      background: #f2f4f8;
-      padding-bottom: 70px;
+      font-family: -apple-system, BlinkMacSystemFont, Arial;
+      background: #f4f6fb;
+      padding-bottom: 75px;
+      -webkit-tap-highlight-color: transparent;
     }
 
+    /* TOP BAR */
     .header {
-      background: #111;
+      background: #0f0f10;
       color: white;
-      padding: 15px;
+      padding: 16px;
+      font-weight: 600;
       text-align: center;
-      font-weight: bold;
+      font-size: 16px;
+      letter-spacing: 0.3px;
     }
 
+    /* PAGES */
     .page {
       display: none;
-      padding: 15px;
+      padding: 16px;
+      animation: fade 0.25s ease;
     }
 
     .active {
       display: block;
     }
 
-    h2 {
-      margin-top: 10px;
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
+    h2 {
+      margin: 10px 0 15px;
+      font-size: 22px;
+    }
+
+    /* CARDS */
     .card {
       background: white;
-      padding: 15px;
-      border-radius: 12px;
-      margin-top: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      padding: 14px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .input-row {
+    /* INPUT */
+    .input-box {
       display: flex;
       gap: 10px;
+      margin-bottom: 15px;
     }
 
     input {
       flex: 1;
-      padding: 10px;
-      border-radius: 8px;
+      padding: 12px;
+      border-radius: 10px;
       border: 1px solid #ddd;
+      outline: none;
+      font-size: 14px;
     }
 
     button {
-      padding: 10px 12px;
+      padding: 12px 14px;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       background: #111;
       color: white;
-      cursor: pointer;
+      font-weight: 600;
     }
 
+    /* DELETE */
     .delete {
-      float: right;
-      background: red;
-      padding: 5px 10px;
-      border-radius: 6px;
+      background: #ff3b30;
+      padding: 6px 10px;
+      border-radius: 8px;
       font-size: 12px;
     }
 
-    /* BOTTOM NAV */
-    .bottom-nav {
+    /* BOTTOM NAV (APP STYLE) */
+    .nav {
       position: fixed;
       bottom: 0;
       left: 0;
@@ -79,19 +99,32 @@
       background: white;
       display: flex;
       justify-content: space-around;
-      padding: 10px 0;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      padding: 10px 0 8px;
+      box-shadow: 0 -5px 20px rgba(0,0,0,0.08);
+      border-top-left-radius: 18px;
+      border-top-right-radius: 18px;
     }
 
-    .nav-btn {
-      font-size: 12px;
+    .tab {
       text-align: center;
-      cursor: pointer;
+      font-size: 11px;
+      color: #777;
+      flex: 1;
     }
 
-    .nav-icon {
-      font-size: 18px;
+    .tab span {
       display: block;
+      font-size: 20px;
+      margin-bottom: 2px;
+    }
+
+    .tab.active {
+      color: #111;
+      font-weight: 600;
+    }
+
+    .tab.active span {
+      transform: scale(1.1);
     }
   </style>
 </head>
@@ -103,7 +136,6 @@
 <!-- DASHBOARD -->
 <div id="dashboard" class="page active">
   <h2>Dashboard</h2>
-
   <div class="card" id="summary"></div>
   <div class="card">Quick access to your home system 🚀</div>
 </div>
@@ -112,7 +144,7 @@
 <div id="rooms" class="page">
   <h2>Rooms</h2>
 
-  <div class="card input-row">
+  <div class="input-box">
     <input id="roomInput" placeholder="Add a room...">
     <button onclick="addRoom()">Add</button>
   </div>
@@ -123,60 +155,64 @@
 <!-- PLANNER -->
 <div id="planner" class="page">
   <h2>Planner</h2>
-
   <div class="card">✔ Clean kitchen</div>
   <div class="card">✔ Decor ideas</div>
-  <div class="card">✔ Weekly tasks</div>
+  <div class="card">✔ Weekly goals</div>
 </div>
 
 <!-- IDEAS -->
 <div id="ideas" class="page">
   <h2>Ideas</h2>
-
   <div class="card">Modern minimalist bedroom</div>
-  <div class="card">Cozy living room setup</div>
-  <div class="card">Luxury kitchen layout</div>
+  <div class="card">Luxury living room setup</div>
+  <div class="card">Organised kitchen layout</div>
 </div>
 
 <!-- BOTTOM NAV -->
-<div class="bottom-nav">
-  <div class="nav-btn" onclick="openPage('dashboard')">
-    <span class="nav-icon">🏠</span>Home
+<div class="nav">
+  <div class="tab active" onclick="openPage('dashboard', this)">
+    <span>🏠</span>Home
   </div>
 
-  <div class="nav-btn" onclick="openPage('rooms')">
-    <span class="nav-icon">🛋️</span>Rooms
+  <div class="tab" onclick="openPage('rooms', this)">
+    <span>🛋️</span>Rooms
   </div>
 
-  <div class="nav-btn" onclick="openPage('planner')">
-    <span class="nav-icon">📝</span>Planner
+  <div class="tab" onclick="openPage('planner', this)">
+    <span>📝</span>Planner
   </div>
 
-  <div class="nav-btn" onclick="openPage('ideas')">
-    <span class="nav-icon">💡</span>Ideas
+  <div class="tab" onclick="openPage('ideas', this)">
+    <span>💡</span>Ideas
   </div>
 </div>
 
 <script>
 let rooms = JSON.parse(localStorage.getItem("rooms")) || ["Living Room", "Bedroom"];
 
-function saveRooms() {
+function save() {
   localStorage.setItem("rooms", JSON.stringify(rooms));
 }
 
-function openPage(page) {
+/* PAGE SWITCH (APP FEEL) */
+function openPage(page, el) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById(page).classList.add("active");
+
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  el.classList.add("active");
 
   if (page === "rooms") renderRooms();
   if (page === "dashboard") updateDashboard();
 }
 
+/* DASHBOARD */
 function updateDashboard() {
   document.getElementById("summary").innerText =
-    "You currently have " + rooms.length + " rooms in your home system.";
+    "You have " + rooms.length + " rooms in your home system.";
 }
 
+/* ROOMS */
 function renderRooms() {
   let list = document.getElementById("roomList");
   list.innerHTML = "";
@@ -185,7 +221,7 @@ function renderRooms() {
     list.innerHTML += `
       <div class="card">
         ${room}
-        <button class="delete" onclick="removeRoom(${i})">❌</button>
+        <button class="delete" onclick="removeRoom(${i})">Delete</button>
       </div>
     `;
   });
@@ -193,12 +229,11 @@ function renderRooms() {
 
 function addRoom() {
   let input = document.getElementById("roomInput");
-  let value = input.value.trim();
 
-  if (value !== "") {
-    rooms.push(value);
-    saveRooms();
+  if (input.value.trim() !== "") {
+    rooms.push(input.value.trim());
     input.value = "";
+    save();
     renderRooms();
     updateDashboard();
   }
@@ -206,11 +241,12 @@ function addRoom() {
 
 function removeRoom(i) {
   rooms.splice(i, 1);
-  saveRooms();
+  save();
   renderRooms();
   updateDashboard();
 }
 
+/* INIT */
 updateDashboard();
 </script>
 
