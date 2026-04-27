@@ -1,23 +1,341 @@
-<div class="card">
-  <b>Room Mode:</b><br><br>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HomeSync Designer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <button onclick="setRoomMode('build')">🧱 Build</button>
-  <button onclick="setRoomMode('blueprint')">📏 Blueprint</button>
-  <button onclick="setRoomMode('photo')">📷 Photo Mode</button>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #f4f6fb;
+      padding-bottom: 70px;
+    }
+
+    .header {
+      background: #111;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .page { display: none; padding: 15px; }
+    .active { display: block; }
+
+    .card {
+      background: white;
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    input, button {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      margin-top: 5px;
+    }
+
+    input { border: 1px solid #ccc; width: 65%; }
+
+    button {
+      background: #111;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* CANVAS */
+    .canvas {
+      width: 100%;
+      height: 60vh;
+      background: #e7ebf5;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .grid {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(#d9deea 1px, transparent 1px),
+        linear-gradient(90deg, #d9deea 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.4;
+    }
+
+    #bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      opacity: 0.25;
+    }
+
+    .item {
+      position: absolute;
+      padding: 8px 10px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .modeBar button {
+      margin-right: 5px;
+    }
+
+    .activeMode {
+      background: #444;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">🏠 HomeSync Designer</div>
+
+<!-- HOME -->
+<div id="home" class="page active">
+  <h2>Rooms</h2>
+
+  <input id="roomInput" placeholder="Add room...">
+  <button onclick="addRoom()">Add</button>
+
+  <div id="roomList"></div>
 </div>
 
-<div class="card" id="blueprintControls" style="display:none;">
-  Width (m): <input id="roomW" type="number" style="width:60px">
-  Height (m): <input id="roomH" type="number" style="width:60px">
-  <button onclick="applyBlueprint()">Apply</button>
+<!-- DESIGNER -->
+<div id="designer" class="page">
+  <button onclick="back()">⬅ Back</button>
+  <h2 id="roomTitle"></h2>
+
+  <!-- MODE SWITCH -->
+  <div class="card modeBar">
+    <button onclick="setMode('design')" id="designBtn">Design</button>
+    <button onclick="setMode('blueprint')" id="blueprintBtn">Blueprint</button>
+    <button onclick="setMode('photo')" id="photoBtn">Photo</button>
+  </div>
+
+  <!-- BLUEPRINT -->
+  <div class="card" id="blueprintBox" style="display:none;">
+    Width: <input id="w" type="number" style="width:60px">
+    Height: <input id="h" type="number" style="width:60px">
+    <button onclick="applyBlueprint()">Set</button>
+  </div>
+
+  <!-- PHOTO -->
+  <div class="card" id="photoBox" style="display:none;">
+    Upload room photo:
+    <input type="file" accept="image/*" onchange="setPhoto(event)">
+  </div>
+
+  <!-- BUY ITEMS -->
+  <div class="card">
+    <b>Add Items</b><br>
+    <button onclick="selectItem('Sofa')">🛋️ Sofa</button>
+    <button onclick="selectItem('Bed')">🛏️ Bed</button>
+    <button onclick="selectItem('Table')">🪑 Table</button>
+    <button onclick="selectItem('Plant')">🪴 Plant</button>
+  </div>
+
+  <!-- CANVAS -->
+  <div class="canvas" id="canvas">
+    <div class="grid"></div>
+    <div id="bg"></div>
+  </div>
 </div>
 
-<div class="card" id="photoControls" style="display:none;">
-  Upload room photo:
-  <input type="file" accept="image/*" onchange="setPhoto(event)">
-</div>
+<script>
+let rooms = JSON.parse(localStorage.getItem("rooms")) || ["Living Room"];
+let data = JSON.parse(localStorage.getItem("data")) || {};
+let photo = JSON.parse(localStorage.getItem("photo")) || {};
+let size = JSON.parse(localStorage.getItem("size")) || {};
 
-<div class="card">
-  <button onclick="exportRoom()">⬇ Export Room</button>
-  <input type="file" onchange="importRoom(event)">
-</div>
+let current = null;
+let selected = null;
+let mode = "design";
+let drag = null;
+
+function save() {
+  localStorage.setItem("rooms", JSON.stringify(rooms));
+  localStorage.setItem("data", JSON.stringify(data));
+  localStorage.setItem("photo", JSON.stringify(photo));
+  localStorage.setItem("size", JSON.stringify(size));
+}
+
+/* ROOMS */
+function addRoom() {
+  let v = document.getElementById("roomInput").value;
+  if (!v) return;
+  rooms.push(v);
+  save();
+  renderRooms();
+}
+
+function renderRooms() {
+  let list = document.getElementById("roomList");
+  list.innerHTML = "";
+
+  rooms.forEach(r => {
+    let d = document.createElement("div");
+    d.className = "card";
+    d.innerText = r;
+    d.onclick = () => openRoom(r);
+    list.appendChild(d);
+  });
+}
+
+/* OPEN */
+function openRoom(name) {
+  current = name;
+
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("designer").classList.add("active");
+
+  document.getElementById("roomTitle").innerText = name;
+
+  if (!data[name]) data[name] = [];
+
+  renderCanvas();
+}
+
+/* MODE SWITCH */
+function setMode(m) {
+  mode = m;
+
+  document.getElementById("blueprintBox").style.display =
+    m === "blueprint" ? "block" : "none";
+
+  document.getElementById("photoBox").style.display =
+    m === "photo" ? "block" : "none";
+
+  document.querySelectorAll(".modeBar button").forEach(b =>
+    b.classList.remove("activeMode")
+  );
+
+  document.getElementById(m + "Btn").classList.add("activeMode");
+}
+
+/* BLUEPRINT */
+function applyBlueprint() {
+  size[current] = {
+    w: document.getElementById("w").value,
+    h: document.getElementById("h").value
+  };
+
+  document.getElementById("canvas").style.aspectRatio =
+    `${size[current].w}/${size[current].h}`;
+
+  save();
+}
+
+/* PHOTO */
+function setPhoto(e) {
+  let file = e.target.files[0];
+  let reader = new FileReader();
+
+  reader.onload = function(ev) {
+    photo[current] = ev.target.result;
+    document.getElementById("bg").style.backgroundImage =
+      `url(${photo[current]})`;
+    save();
+  };
+
+  reader.readAsDataURL(file);
+}
+
+/* SELECT ITEM */
+function selectItem(i) {
+  selected = i;
+}
+
+/* CANVAS */
+function renderCanvas() {
+  let c = document.getElementById("canvas");
+  c.innerHTML = '<div class="grid"></div><div id="bg"></div>';
+
+  if (photo[current]) {
+    document.getElementById("bg").style.backgroundImage =
+      `url(${photo[current]})`;
+  }
+
+  data[current].forEach((it, i) => {
+    let el = document.createElement("div");
+    el.className = "item";
+    el.innerText = it.name;
+
+    el.style.left = it.x + "px";
+    el.style.top = it.y + "px";
+
+    el.onclick = () => {
+      if (mode === "design") {
+        data[current].splice(i, 1);
+        save();
+        renderCanvas();
+      }
+    };
+
+    el.onmousedown = (e) => {
+      if (mode !== "design") return;
+      drag = { i, ox: e.offsetX, oy: e.offsetY };
+    };
+
+    c.appendChild(el);
+  });
+
+  c.onclick = (e) => {
+    if (!selected || mode !== "design") return;
+
+    let r = c.getBoundingClientRect();
+
+    data[current].push({
+      name: selected,
+      x: e.clientX - r.left,
+      y: e.clientY - r.top
+    });
+
+    selected = null;
+    save();
+    renderCanvas();
+  };
+}
+
+/* DRAG */
+document.addEventListener("mousemove", e => {
+  if (!drag) return;
+
+  let c = document.getElementById("canvas");
+  let r = c.getBoundingClientRect();
+
+  let it = data[current][drag.i];
+
+  it.x = e.clientX - r.left - drag.ox;
+  it.y = e.clientY - r.top - drag.oy;
+
+  save();
+  renderCanvas();
+});
+
+document.addEventListener("mouseup", () => drag = null);
+
+/* BACK */
+function back() {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("home").classList.add("active");
+  renderRooms();
+}
+
+/* INIT */
+renderRooms();
+setMode("design");
+</script>
+
+</body>
+</html>
