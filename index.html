@@ -55,6 +55,10 @@
       margin-top: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
+
+    button {
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -76,13 +80,17 @@
   </div>
 
   <!-- CONTENT -->
-  <div class="content" id="content">
-
-  </div>
+  <div class="content" id="content"></div>
 
 </div>
 
 <script>
+let rooms = JSON.parse(localStorage.getItem("rooms")) || ["Living Room", "Bedroom", "Kitchen"];
+
+function saveRooms() {
+  localStorage.setItem("rooms", JSON.stringify(rooms));
+}
+
 function showPage(page) {
   let content = document.getElementById("content");
 
@@ -90,16 +98,30 @@ function showPage(page) {
     content.innerHTML = `
       <h1>Dashboard</h1>
       <div class="card">Welcome to HomeSync 🚀</div>
-      <div class="card">Quick overview of your home system</div>
+      <div class="card">You currently have ${rooms.length} rooms</div>
     `;
   }
 
   if (page === "rooms") {
+    let roomsHTML = rooms.map((room, index) => `
+      <div class="card">
+        ${room}
+        <button onclick="removeRoom(${index})"
+          style="float:right; background:red; color:white; border:none; padding:5px 10px; border-radius:6px;">
+          ❌
+        </button>
+      </div>
+    `).join("");
+
     content.innerHTML = `
       <h1>Rooms</h1>
-      <div class="card">Living Room</div>
-      <div class="card">Bedroom</div>
-      <div class="card">Kitchen</div>
+
+      <div class="card">
+        <input id="roomInput" placeholder="Add new room..." style="padding:8px; width:70%;">
+        <button onclick="addRoom()" style="padding:8px;">Add</button>
+      </div>
+
+      ${roomsHTML}
     `;
   }
 
@@ -118,6 +140,25 @@ function showPage(page) {
       <div class="card">Cozy living room setup</div>
     `;
   }
+}
+
+function addRoom() {
+  let input = document.getElementById("roomInput");
+  let value = input.value.trim();
+
+  if (value !== "") {
+    rooms.push(value);
+    saveRooms();
+    showPage("rooms");
+  }
+
+  input.value = "";
+}
+
+function removeRoom(index) {
+  rooms.splice(index, 1);
+  saveRooms();
+  showPage("rooms");
 }
 
 // default page
