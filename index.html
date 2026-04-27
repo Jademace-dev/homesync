@@ -4,41 +4,55 @@
   <title>HomeSync</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: Arial;
-      margin: 0;
-      background: #f4f4f4;
-    }
+   <body style="margin:0; font-family: Arial; background:#f2f4f8;">
 
-    header {
-      background: #111;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
+<!-- HEADER -->
+<div style="background:#111; color:white; padding:20px; display:flex; justify-content:space-between; align-items:center;">
+  <h2 style="margin:0;">🏠 HomeSync</h2>
+  <div style="font-size:14px; opacity:0.8;">Your home organisation app</div>
+</div>
 
-    .container {
-      padding: 20px;
-    }
+<!-- MAIN LAYOUT -->
+<div style="display:flex; min-height:100vh;">
 
-    .card {
-      background: white;
-      padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 10px;
-    }
+  <!-- SIDEBAR -->
+  <div style="width:200px; background:white; padding:20px; box-shadow:2px 0 10px rgba(0,0,0,0.05);">
+    <h3>Menu</h3>
+    <p>🏠 Dashboard</p>
+    <p>🛋️ Rooms</p>
+    <p>📝 Planner</p>
+    <p>💡 Ideas</p>
+  </div>
 
-    button {
-      padding: 10px;
-      margin: 5px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-  </style>
-</head>
+  <!-- CONTENT -->
+  <div style="flex:1; padding:20px;">
 
-<body>
+    <h1>Dashboard</h1>
+
+    <!-- CARDS -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
+
+      <div style="background:white; padding:15px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+        <h3>Rooms</h3>
+        <p>Organise each room in your home</p>
+      </div>
+
+      <div style="background:white; padding:15px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+        <h3>Planner</h3>
+        <p>Track home tasks and ideas</p>
+      </div>
+
+      <div style="background:white; padding:15px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+        <h3>Ideas</h3>
+        <p>Save inspiration for your home</p>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+</body>
 
 <header>
   <h1>🏠 HomeSync</h1>
