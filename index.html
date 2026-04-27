@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>HomeSync</title>
+  <title>HomeSync Build Mode</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
       margin: 0;
       font-family: Arial;
-      background: #f4f6fb;
+      background: #f3f5fb;
       padding-bottom: 70px;
     }
 
@@ -20,63 +20,75 @@
       font-weight: bold;
     }
 
-    .page {
-      display: none;
-      padding: 15px;
-    }
-
-    .active {
-      display: block;
-    }
+    .page { display: none; padding: 15px; }
+    .active { display: block; }
 
     .card {
       background: white;
-      padding: 14px;
+      padding: 12px;
       border-radius: 12px;
       margin-top: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
 
-    button {
-      border: none;
-      padding: 8px 10px;
+    input, button {
+      padding: 10px;
       border-radius: 8px;
+      border: none;
+      margin-top: 5px;
+    }
+
+    input { border: 1px solid #ccc; width: 65%; }
+
+    button {
+      background: #111;
+      color: white;
       cursor: pointer;
     }
 
-    input {
-      padding: 10px;
-      width: 70%;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
-    .delete {
-      background: red;
-      color: white;
-      float: right;
-    }
-
-    /* ROOM DESIGN AREA */
-    .room-canvas {
-      height: 60vh;
-      background: #e9edf5;
+    /* ROOM CANVAS (SIMS STYLE) */
+    .canvas {
+      width: 100%;
+      height: 65vh;
+      background: #e7ebf5;
       border-radius: 16px;
       position: relative;
       overflow: hidden;
       margin-top: 10px;
+      border: 2px dashed #cfd6e6;
     }
 
+    /* GRID */
+    .canvas::before {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(#d9deea 1px, transparent 1px),
+                        linear-gradient(90deg, #d9deea 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.5;
+    }
+
+    /* ITEMS */
     .item {
       position: absolute;
       padding: 8px 10px;
       background: white;
       border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
       font-size: 12px;
+      cursor: grab;
+      user-select: none;
+      z-index: 2;
     }
 
-    .bottom-nav {
+    .item:active {
+      cursor: grabbing;
+    }
+
+    /* NAV */
+    .nav {
       position: fixed;
       bottom: 0;
       left: 0;
@@ -88,17 +100,13 @@
       box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     }
 
-    .tab {
-      text-align: center;
-      font-size: 12px;
-      cursor: pointer;
-    }
+    .tab { font-size: 12px; text-align: center; cursor: pointer; }
   </style>
 </head>
 
 <body>
 
-<div class="header">🏠 HomeSync Designer</div>
+<div class="header">🏠 HomeSync Build Mode</div>
 
 <!-- HOME -->
 <div id="home" class="page active">
@@ -106,62 +114,48 @@
   <div class="card" id="summary"></div>
 </div>
 
-<!-- ROOMS LIST -->
+<!-- ROOMS -->
 <div id="rooms" class="page">
   <h2>Rooms</h2>
-
   <input id="roomInput" placeholder="Add room...">
   <button onclick="addRoom()">Add</button>
 
   <div id="roomList"></div>
 </div>
 
-<!-- ROOM DESIGN -->
-<div id="designer" class="page">
-  <button onclick="backToRooms()">⬅ Back</button>
+<!-- BUILDER -->
+<div id="builder" class="page">
+  <button onclick="back()">⬅ Back</button>
   <h2 id="roomTitle"></h2>
 
   <div class="card">
     <input id="itemInput" placeholder="Add item (sofa, plant...)">
-    <button onclick="addItem()">Add</button>
+    <button onclick="addItem()">Place</button>
   </div>
 
-  <div class="room-canvas" id="canvas"></div>
-</div>
-
-<!-- PLANNER -->
-<div id="planner" class="page">
-  <h2>Planner</h2>
-  <div class="card">✔ Clean kitchen</div>
-</div>
-
-<!-- IDEAS -->
-<div id="ideas" class="page">
-  <h2>Ideas</h2>
-  <div class="card">Modern bedroom</div>
+  <div class="canvas" id="canvas"></div>
 </div>
 
 <!-- NAV -->
-<div class="bottom-nav">
-  <div class="tab" onclick="showPage('home')">🏠</div>
-  <div class="tab" onclick="showPage('rooms')">🛋️</div>
-  <div class="tab" onclick="showPage('planner')">📝</div>
-  <div class="tab" onclick="showPage('ideas')">💡</div>
+<div class="nav">
+  <div class="tab" onclick="show('home')">🏠</div>
+  <div class="tab" onclick="show('rooms')">🛋️</div>
 </div>
 
 <script>
 let rooms = JSON.parse(localStorage.getItem("rooms")) || ["Living Room"];
-let roomData = JSON.parse(localStorage.getItem("roomData")) || {};
+let data = JSON.parse(localStorage.getItem("data")) || {};
 
 let currentRoom = null;
+let dragItem = null;
 
 function save() {
   localStorage.setItem("rooms", JSON.stringify(rooms));
-  localStorage.setItem("roomData", JSON.stringify(roomData));
+  localStorage.setItem("data", JSON.stringify(data));
 }
 
-/* PAGE SWITCH */
-function showPage(page) {
+/* NAV */
+function show(page) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById(page).classList.add("active");
 
@@ -172,7 +166,7 @@ function showPage(page) {
 /* HOME */
 function updateHome() {
   document.getElementById("summary").innerText =
-    "You have " + rooms.length + " rooms to design.";
+    "You have " + rooms.length + " rooms ready to design.";
 }
 
 /* ROOMS */
@@ -180,62 +174,89 @@ function renderRooms() {
   let list = document.getElementById("roomList");
   list.innerHTML = "";
 
-  rooms.forEach((room, i) => {
-    list.innerHTML += `
-      <div class="card">
-        <div onclick="openRoom('${room}')">${room}</div>
-      </div>
-    `;
+  rooms.forEach(r => {
+    let div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = r;
+    div.onclick = () => openRoom(r);
+    list.appendChild(div);
   });
 }
 
-/* OPEN ROOM DESIGN */
+/* OPEN BUILDER */
 function openRoom(name) {
   currentRoom = name;
 
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  document.getElementById("designer").classList.add("active");
+  document.getElementById("builder").classList.add("active");
 
   document.getElementById("roomTitle").innerText = name;
 
-  if (!roomData[name]) {
-    roomData[name] = [];
-  }
+  if (!data[name]) data[name] = [];
 
   renderCanvas();
 }
 
-/* ROOM CANVAS */
+/* CANVAS */
 function renderCanvas() {
   let canvas = document.getElementById("canvas");
   canvas.innerHTML = "";
 
-  roomData[currentRoom].forEach((item, i) => {
+  data[currentRoom].forEach((item, i) => {
     let el = document.createElement("div");
     el.className = "item";
-    el.style.left = item.x + "px";
-    el.style.top = item.y + "px";
     el.innerText = item.name;
 
+    el.style.left = item.x + "px";
+    el.style.top = item.y + "px";
+
+    /* DELETE */
     el.onclick = () => {
-      roomData[currentRoom].splice(i, 1);
+      data[currentRoom].splice(i, 1);
       save();
       renderCanvas();
+    };
+
+    /* DRAG */
+    el.onmousedown = (e) => {
+      dragItem = { el, index: i, offsetX: e.offsetX, offsetY: e.offsetY };
     };
 
     canvas.appendChild(el);
   });
 }
 
-/* ADD ITEM TO ROOM */
+/* DRAG MOVE */
+document.addEventListener("mousemove", (e) => {
+  if (!dragItem) return;
+
+  let canvas = document.getElementById("canvas");
+  let rect = canvas.getBoundingClientRect();
+
+  let x = e.clientX - rect.left - dragItem.offsetX;
+  let y = e.clientY - rect.top - dragItem.offsetY;
+
+  let item = data[currentRoom][dragItem.index];
+  item.x = x;
+  item.y = y;
+
+  save();
+  renderCanvas();
+});
+
+document.addEventListener("mouseup", () => {
+  dragItem = null;
+});
+
+/* ADD ITEM */
 function addItem() {
   let input = document.getElementById("itemInput");
 
   if (input.value.trim() !== "") {
-    roomData[currentRoom].push({
+    data[currentRoom].push({
       name: input.value,
-      x: Math.random() * 200 + 20,
-      y: Math.random() * 200 + 20
+      x: 50,
+      y: 50
     });
 
     input.value = "";
@@ -245,8 +266,8 @@ function addItem() {
 }
 
 /* BACK */
-function backToRooms() {
-  showPage("rooms");
+function back() {
+  show("rooms");
 }
 
 /* INIT */
