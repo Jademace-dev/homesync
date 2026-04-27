@@ -3,77 +3,126 @@
 <head>
   <title>HomeSync</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-   <body style="margin:0; font-family: Arial; background:#f2f4f8;">
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: #f2f4f8;
+    }
 
-<!-- HEADER -->
-<div style="background:#111; color:white; padding:20px; display:flex; justify-content:space-between; align-items:center;">
-  <h2 style="margin:0;">🏠 HomeSync</h2>
-  <div style="font-size:14px; opacity:0.8;">Your home organisation app</div>
+    .header {
+      background: #111;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: white;
+      padding: 20px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+
+    .nav-item {
+      padding: 10px;
+      margin: 5px 0;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+
+    .nav-item:hover {
+      background: #f0f0f0;
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      margin-top: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="header">
+  <h2>🏠 HomeSync</h2>
+  <span>Your home app</span>
 </div>
-
-<!-- MAIN LAYOUT -->
-<div style="display:flex; min-height:100vh;">
-
-  <!-- SIDEBAR -->
-  <div style="width:200px; background:white; padding:20px; box-shadow:2px 0 10px rgba(0,0,0,0.05);">
-    <h3>Menu</h3>
-    <p>🏠 Dashboard</p>
-    <p>🛋️ Rooms</p>
-    <p>📝 Planner</p>
-    <p>💡 Ideas</p>
-  </div>
-
-  <!-- CONTENT -->
-  <div style="flex:1; padding:20px;">
-
-    <h1>Dashboard</h1>
-
-    <!-- CARDS -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
-
-      <div style="background:white; padding:15px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
-        <h3>Rooms</h3>
-        <p>Organise each room in your home</p>
-      </div>
-
-      <div style="background:white; padding:15px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
-        <h3>Planner</h3>
-        <p>Track home tasks and ideas</p>
-      </div>
-
-      <div style="background:white; padding:15px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
-        <h3>Ideas</h3>
-        <p>Save inspiration for your home</p>
-      </div>
-
-    </div>
-
-  </div>
-</div>
-
-</body>
-
-<header>
-  <h1>🏠 HomeSync</h1>
-  <p>Your home organisation app</p>
-</header>
 
 <div class="container">
 
-  <div class="card">
-    <h2>Dashboard</h2>
-    <button>Rooms</button>
-    <button>Planner</button>
-    <button>Ideas</button>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="nav-item" onclick="showPage('dashboard')">🏠 Dashboard</div>
+    <div class="nav-item" onclick="showPage('rooms')">🛋️ Rooms</div>
+    <div class="nav-item" onclick="showPage('planner')">📝 Planner</div>
+    <div class="nav-item" onclick="showPage('ideas')">💡 Ideas</div>
   </div>
 
-  <div class="card">
-    <h2>Welcome</h2>
-    <p>This is your HomeSync starting app 🚀</p>
+  <!-- CONTENT -->
+  <div class="content" id="content">
+
   </div>
 
 </div>
+
+<script>
+function showPage(page) {
+  let content = document.getElementById("content");
+
+  if (page === "dashboard") {
+    content.innerHTML = `
+      <h1>Dashboard</h1>
+      <div class="card">Welcome to HomeSync 🚀</div>
+      <div class="card">Quick overview of your home system</div>
+    `;
+  }
+
+  if (page === "rooms") {
+    content.innerHTML = `
+      <h1>Rooms</h1>
+      <div class="card">Living Room</div>
+      <div class="card">Bedroom</div>
+      <div class="card">Kitchen</div>
+    `;
+  }
+
+  if (page === "planner") {
+    content.innerHTML = `
+      <h1>Planner</h1>
+      <div class="card">✔ Clean kitchen</div>
+      <div class="card">✔ Decor ideas</div>
+    `;
+  }
+
+  if (page === "ideas") {
+    content.innerHTML = `
+      <h1>Ideas</h1>
+      <div class="card">Modern minimalist bedroom</div>
+      <div class="card">Cozy living room setup</div>
+    `;
+  }
+}
+
+// default page
+showPage("dashboard");
+</script>
 
 </body>
 </html>
