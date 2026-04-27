@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>HomeSync Build Mode</title>
+  <title>HomeSync Sims Mode</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -29,6 +29,7 @@
       border-radius: 12px;
       margin-top: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      cursor: pointer;
     }
 
     input, button {
@@ -46,31 +47,53 @@
       cursor: pointer;
     }
 
-    /* ROOM CANVAS (SIMS STYLE) */
+    /* LAYOUT */
+    .layout {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* BUY MODE */
+    .shop {
+      width: 35%;
+      background: white;
+      padding: 10px;
+      border-radius: 12px;
+      height: 65vh;
+      overflow: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .shop-item {
+      background: #f1f3f8;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* CANVAS */
     .canvas {
-      width: 100%;
+      flex: 1;
       height: 65vh;
       background: #e7ebf5;
-      border-radius: 16px;
+      border-radius: 12px;
       position: relative;
       overflow: hidden;
-      margin-top: 10px;
       border: 2px dashed #cfd6e6;
     }
 
-    /* GRID */
-    .canvas::before {
-      content: "";
+    .grid {
+      background-image:
+        linear-gradient(#d9deea 1px, transparent 1px),
+        linear-gradient(90deg, #d9deea 1px, transparent 1px);
+      background-size: 40px 40px;
       position: absolute;
       width: 100%;
       height: 100%;
-      background-image: linear-gradient(#d9deea 1px, transparent 1px),
-                        linear-gradient(90deg, #d9deea 1px, transparent 1px);
-      background-size: 40px 40px;
       opacity: 0.5;
     }
 
-    /* ITEMS */
     .item {
       position: absolute;
       padding: 8px 10px;
@@ -79,47 +102,34 @@
       box-shadow: 0 3px 10px rgba(0,0,0,0.15);
       font-size: 12px;
       cursor: grab;
-      user-select: none;
       z-index: 2;
     }
 
-    .item:active {
-      cursor: grabbing;
-    }
+    .item:active { cursor: grabbing; }
 
-    /* NAV */
-    .nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: white;
+    .mode {
       display: flex;
-      justify-content: space-around;
-      padding: 10px;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+      gap: 10px;
+      margin-bottom: 10px;
     }
 
-    .tab { font-size: 12px; text-align: center; cursor: pointer; }
+    .mode button {
+      flex: 1;
+    }
+
+    .active-mode {
+      background: #444;
+    }
   </style>
 </head>
 
 <body>
 
-<div class="header">🏠 HomeSync Build Mode</div>
+<div class="header">🏠 HomeSync Sims Builder</div>
 
 <!-- HOME -->
 <div id="home" class="page active">
-  <h2>Dashboard</h2>
-  <div class="card" id="summary"></div>
-</div>
-
-<!-- ROOMS -->
-<div id="rooms" class="page">
   <h2>Rooms</h2>
-  <input id="roomInput" placeholder="Add room...">
-  <button onclick="addRoom()">Add</button>
-
   <div id="roomList"></div>
 </div>
 
@@ -128,18 +138,30 @@
   <button onclick="back()">⬅ Back</button>
   <h2 id="roomTitle"></h2>
 
-  <div class="card">
-    <input id="itemInput" placeholder="Add item (sofa, plant...)">
-    <button onclick="addItem()">Place</button>
+  <div class="mode">
+    <button onclick="setMode('buy')" id="buyBtn">🛒 Buy Mode</button>
+    <button onclick="setMode('build')" id="buildBtn">🧱 Build Mode</button>
   </div>
 
-  <div class="canvas" id="canvas"></div>
-</div>
+  <div class="layout">
 
-<!-- NAV -->
-<div class="nav">
-  <div class="tab" onclick="show('home')">🏠</div>
-  <div class="tab" onclick="show('rooms')">🛋️</div>
+    <!-- BUY PANEL -->
+    <div class="shop" id="shop">
+      <b>Furniture</b>
+
+      <div class="shop-item" onclick="selectItem('Sofa')">🛋️ Sofa</div>
+      <div class="shop-item" onclick="selectItem('Bed')">🛏️ Bed</div>
+      <div class="shop-item" onclick="selectItem('Table')">🪑 Table</div>
+      <div class="shop-item" onclick="selectItem('Plant')">🪴 Plant</div>
+      <div class="shop-item" onclick="selectItem('Lamp')">💡 Lamp</div>
+    </div>
+
+    <!-- CANVAS -->
+    <div class="canvas" id="canvas">
+      <div class="grid"></div>
+    </div>
+
+  </div>
 </div>
 
 <script>
@@ -147,26 +169,13 @@ let rooms = JSON.parse(localStorage.getItem("rooms")) || ["Living Room"];
 let data = JSON.parse(localStorage.getItem("data")) || {};
 
 let currentRoom = null;
-let dragItem = null;
+let selectedItem = null;
+let mode = "buy";
+let drag = null;
 
 function save() {
   localStorage.setItem("rooms", JSON.stringify(rooms));
   localStorage.setItem("data", JSON.stringify(data));
-}
-
-/* NAV */
-function show(page) {
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  document.getElementById(page).classList.add("active");
-
-  if (page === "rooms") renderRooms();
-  if (page === "home") updateHome();
-}
-
-/* HOME */
-function updateHome() {
-  document.getElementById("summary").innerText =
-    "You have " + rooms.length + " rooms ready to design.";
 }
 
 /* ROOMS */
@@ -177,13 +186,13 @@ function renderRooms() {
   rooms.forEach(r => {
     let div = document.createElement("div");
     div.className = "card";
-    div.innerHTML = r;
+    div.innerText = r;
     div.onclick = () => openRoom(r);
     list.appendChild(div);
   });
 }
 
-/* OPEN BUILDER */
+/* OPEN ROOM */
 function openRoom(name) {
   currentRoom = name;
 
@@ -197,10 +206,26 @@ function openRoom(name) {
   renderCanvas();
 }
 
+/* MODE SWITCH */
+function setMode(m) {
+  mode = m;
+
+  document.getElementById("buyBtn").classList.remove("active-mode");
+  document.getElementById("buildBtn").classList.remove("active-mode");
+
+  document.getElementById(m + "Btn").classList.add("active-mode");
+}
+
+/* BUY MODE SELECT */
+function selectItem(item) {
+  selectedItem = item;
+  setMode("build");
+}
+
 /* CANVAS */
 function renderCanvas() {
   let canvas = document.getElementById("canvas");
-  canvas.innerHTML = "";
+  canvas.innerHTML = '<div class="grid"></div>';
 
   data[currentRoom].forEach((item, i) => {
     let el = document.createElement("div");
@@ -212,66 +237,68 @@ function renderCanvas() {
 
     /* DELETE */
     el.onclick = () => {
-      data[currentRoom].splice(i, 1);
-      save();
-      renderCanvas();
+      if (mode === "build") {
+        data[currentRoom].splice(i, 1);
+        save();
+        renderCanvas();
+      }
     };
 
     /* DRAG */
     el.onmousedown = (e) => {
-      dragItem = { el, index: i, offsetX: e.offsetX, offsetY: e.offsetY };
+      if (mode !== "build") return;
+
+      drag = { index: i, offsetX: e.offsetX, offsetY: e.offsetY };
     };
 
     canvas.appendChild(el);
   });
+
+  /* PLACE NEW ITEM */
+  canvas.onclick = (e) => {
+    if (!selectedItem || mode !== "build") return;
+
+    let rect = canvas.getBoundingClientRect();
+
+    data[currentRoom].push({
+      name: selectedItem,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+
+    selectedItem = null;
+    save();
+    renderCanvas();
+  };
 }
 
 /* DRAG MOVE */
 document.addEventListener("mousemove", (e) => {
-  if (!dragItem) return;
+  if (!drag) return;
 
   let canvas = document.getElementById("canvas");
   let rect = canvas.getBoundingClientRect();
 
-  let x = e.clientX - rect.left - dragItem.offsetX;
-  let y = e.clientY - rect.top - dragItem.offsetY;
+  let item = data[currentRoom][drag.index];
 
-  let item = data[currentRoom][dragItem.index];
-  item.x = x;
-  item.y = y;
+  item.x = e.clientX - rect.left - drag.offsetX;
+  item.y = e.clientY - rect.top - drag.offsetY;
 
   save();
   renderCanvas();
 });
 
-document.addEventListener("mouseup", () => {
-  dragItem = null;
-});
-
-/* ADD ITEM */
-function addItem() {
-  let input = document.getElementById("itemInput");
-
-  if (input.value.trim() !== "") {
-    data[currentRoom].push({
-      name: input.value,
-      x: 50,
-      y: 50
-    });
-
-    input.value = "";
-    save();
-    renderCanvas();
-  }
-}
+document.addEventListener("mouseup", () => drag = null);
 
 /* BACK */
 function back() {
-  show("rooms");
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("home").classList.add("active");
 }
 
 /* INIT */
-updateHome();
+renderRooms();
+setMode("buy");
 </script>
 
 </body>
